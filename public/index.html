@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Image Converter</title>
+  </head>
+  <body>
+    <h1>Image Converter</h1>
+    <form id="imageForm">
+      <input type="file" name="imageFile">
+      <br>
+      <button type="submit">Convert</button>
+    </form>
+    <br>
+    <img id="outputImage">
+    <script>
+      const imageForm = document.getElementById('imageForm');
+      const outputImage = document.getElementById('outputImage');
+      
+      imageForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        
+        const formData = new FormData();
+        const fileInput = event.target.elements.imageFile;
+        const inputFile = fileInput.files[0];
+        
+        if (!inputFile) {
+          console.error('No file selected');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(inputFile);
+        
+        reader.onload = async () => {
+          const inputBuffer = reader.result;
+          formData.append('imageFile', new Blob([inputBuffer], { type: inputFile.type }), inputFile.name);
+          
+          try {
+            const response = await fetch('/optimise', {
+              method: 'POST',
+              body: formData
+            });
+            
+            if (!response.ok) {
+              throw new Error(response.statusText);
+            }
+            
+            const outputBuffer = await response.arrayBuffer();
+            const outputBlob = new Blob([outputBuffer], { type: 'image/webp' });
+            const outputUrl = URL.createObjectURL(outputBlob);
+            
+            outputImage.src = outputUrl;
+          } catch (err) {
+            console.error(err);
+          }
+        };
+      });
+    </script>
+  </body>
+</html>
