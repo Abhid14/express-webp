@@ -11,18 +11,17 @@ const upload = multer();
 app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-app.post("/optimise", upload.single("imageFile"), async (req, res) => {
+app.post('/convert', upload.single('imageFile'), async (req, res) => {
   try {
     const inputBuffer = req.file.buffer;
-
     const outputBuffer = await sharp(inputBuffer)
       .webp({ quality: 75 })
       .toBuffer();
-
-    res.type("webp").send(outputBuffer);
+    const filename = req.file.originalname.replace(/\.[^/.]+$/, "");
+    res.type('webp').attachment(`${filename}.webp`).send(outputBuffer);
   } catch (err) {
     console.error(err);
-    res.status(400).send("Error converting image");
+    res.status(400).send('Error converting image');
   }
 });
 
